@@ -72,6 +72,7 @@ Route::group(array('before' => 'auth|csrf|key.required'), function() {
     Route::controller('debug', 'DebugController');
     Route::controller('profile', 'ProfileController');
     Route::controller('help', 'HelpController');
+    Route::controller('srp', 'SrpController');
 
 });
 

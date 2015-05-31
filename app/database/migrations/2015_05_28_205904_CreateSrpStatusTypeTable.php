@@ -23,24 +23,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
-{
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+class CreateSrpStatusTypeTable extends Migration {
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migrations.
+	|
+	*/
+	public function up()
+	{
+		Schema::create('srp_status_type', function(Blueprint $table)
+		{
+			$table->increments('statusTypeID')->unsigned();
+			$table->string('statusTypeName')->unique();
+			$table->string('statusTypeTag');
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+			$table->timestamps();
+			$table->softDeletes();
+		});
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
+	{
+		Schema::dropIfExists('srp_status_type');
+	}
+
 }

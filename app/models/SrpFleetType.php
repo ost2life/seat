@@ -23,24 +23,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+class SrpFleetType extends Eloquent
 {
+	protected $fillable   = array('fleetTypeName');
+	protected $table      = 'srp_fleet_type';
+	protected $primaryKey = 'fleetTypeID';
+	protected $softDelete = true;
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
-
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	public function scopeWithFleetCount($query) {
+		$query
+			->select('srp_fleet_type.fleetTypeID', 'srp_fleet_type.fleetTypeName', DB::raw('COUNT(srp_fleet.fleetID) AS fleetCount'))
+			->join('srp_fleet', 'srp_fleet.fleetTypeID', '=', 'srp_fleet_type.fleetTypeID', 'left')
+			->groupBy('srp_fleet_type.fleetTypeID');
+	}
 }

@@ -23,24 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+class SrpRequest extends Eloquent
 {
-
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
-
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	protected $fillable   = array('requestCharacterID', 'fleetID', 'killID');
+	protected $table      = 'srp_request';
+	protected $primaryKey = 'requestID';
+	protected $softDelete = true;
 }

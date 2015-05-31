@@ -23,24 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+class SrpKill extends Eloquent
 {
-
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
-
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	protected $fillable   = array('killID', 'killTime', 'solarSystemID', 'moonID', 'shipTypeID', 'characterID', 'corporationID', 'allianceID', 'factionID', 'damageTaken', 'hash', 'totalValue', 'points');
+	protected $table      = 'srp_kill';
+	protected $primaryKey = 'killID';
+	protected $softDelete = true;
 }
