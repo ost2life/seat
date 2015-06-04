@@ -23,42 +23,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
+class SrpDoctrine extends Eloquent
+{
+	protected $fillable   = array('name');
+	protected $table      = 'srp_doctrines';
+	protected $primaryKey = 'id';
+	protected $softDelete = true;
 
-class CreateSrpShipTypeTable extends Migration {
-	/*
-	|--------------------------------------------------------------------------
-	| up()
-	|--------------------------------------------------------------------------
-	|
-	| Runs the migration.
-	|
-	*/
-	public function up()
+	public function characters()
 	{
-		Schema::create('srp_ship_type', function(Blueprint $table)
-		{
-			$table->integer('shipTypeID')->unsigned()->primary();
-			$table->string ('shipTypeName');
-			$table->decimal('shipTypeValue', 15, 2)->default(0.00);
-
-			$table->timestamps();
-			$table->softDeletes();
-		});
+		return $this->belongsToMany('EveAccountAPIKeyInfoCharacters', 'srp_doctrine_characters', 'fleetTypeID', 'apiCharacterID');
 	}
 
-	/*
-	|--------------------------------------------------------------------------
-	| up()
-	|--------------------------------------------------------------------------
-	|
-	| Reverses the migration.
-	|
-	*/
-	public function down()
+	public function fleets()
 	{
-		Schema::dropIfExists('srp_ship_type');
+		return $this->belongsToMany('SrpFleet', 'srp_doctrine_fleet', 'doctrineID', 'fleetID');
 	}
 
+	public function ships()
+	{
+		return $this->belongsToMany('SrpShip', 'srp_doctrine_ships', 'doctrineID', 'shipID');
+	}
 }

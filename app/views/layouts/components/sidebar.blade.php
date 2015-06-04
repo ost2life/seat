@@ -127,14 +127,12 @@
           <i class="fa fa-angle-left pull-right"></i>
         </a>
         <ul class="treeview-menu">
-          <li><a href="{{ action('SrpController@getRequests') }}"><i class="fa fa-angle-double-right"></i> Your Requests</a></li>
-          <li><a href="{{ action('SrpController@getFleets') }}"><i class="fa fa-angle-double-right"></i> Your Fleets</a></li>
-          @if(Seat\Services\Helpers\SrpHelper::isManager())
-            <li><a href="{{ action('SrpController@getRequests', array('all')) }}"><i class="fa fa-angle-double-right"></i> All Requests</a></li>
-            <li><a href="{{ action('SrpController@getFleets', array('all')) }}"><i class="fa fa-angle-double-right"></i> All Fleets</a></li>
+          @if (Seat\Services\Helpers\SrpHelper::getAvailableFleetTypes()->count() > 0)
+            <li><a href="{{ action('SrpFleetController@index') }}"><i class="fa  fa-fw fa-angle-double-right"></i> Fleets</a></li>
           @endif
-          @if (Seat\Services\Helpers\SrpHelper::isAdmin())
-            <li><a href="{{ action('SrpController@getConfigure') }}"><i class="fa fa-angle-double-right"></i> Configure</a></li>
+          <li><a href="{{ action('SrpRequestController@index') }}"><i class="fa  fa-fw fa-angle-double-right"></i> Requests</a></li>
+          @if (Seat\Services\Helpers\SrpHelper::canConfigure())
+            <li><a href="{{ action('SrpConfigController@index') }}"><i class="fa fa-fw fa-cog"></i> Configure</a></li>
           @endif
         </ul>
       </li>

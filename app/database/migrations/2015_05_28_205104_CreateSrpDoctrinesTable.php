@@ -23,10 +23,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class SrpStatus extends Eloquent
-{
-	protected $fillable   = array('statusCharacterID', 'statusValue', 'statusNotes', 'statusTypeID', 'requestID');
-	protected $table      = 'srp_status';
-	protected $primaryKey = 'statusID';
-	protected $softDelete = true;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateSrpDoctrinesTable extends Migration {
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migration.
+	|
+	*/
+	public function up()
+	{
+		Schema::create('srp_doctrines', function(Blueprint $table)
+		{
+			$table->increments('id')->unsigned();
+			$table->string ('name')->unique();
+			$table->boolean('public')->default(true);
+
+			$table->timestamps();
+			$table->softDeletes();
+		});
+	}
+
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
+	{
+		Schema::dropIfExists('srp_doctrines');
+	}
+
 }

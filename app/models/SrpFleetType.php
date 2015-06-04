@@ -25,15 +25,13 @@ SOFTWARE.
 
 class SrpFleetType extends Eloquent
 {
-	protected $fillable   = array('fleetTypeName');
-	protected $table      = 'srp_fleet_type';
-	protected $primaryKey = 'fleetTypeID';
+	protected $fillable   = array('name', 'public');
+	protected $table      = 'srp_fleet_types';
+	protected $primaryKey = 'id';
 	protected $softDelete = true;
 
-	public function scopeWithFleetCount($query) {
-		$query
-			->select('srp_fleet_type.fleetTypeID', 'srp_fleet_type.fleetTypeName', DB::raw('COUNT(srp_fleet.fleetID) AS fleetCount'))
-			->join('srp_fleet', 'srp_fleet.fleetTypeID', '=', 'srp_fleet_type.fleetTypeID', 'left')
-			->groupBy('srp_fleet_type.fleetTypeID');
+	public function fleets()
+	{
+		return $this->hasMany('SrpFleet', 'fleetTypeID', 'id');
 	}
 }

@@ -23,41 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
-
-class CreateSrpFleetTypeTable extends Migration {
-	/*
-	|--------------------------------------------------------------------------
-	| up()
-	|--------------------------------------------------------------------------
-	|
-	| Runs the migration.
-	|
-	*/
-	public function up()
-	{
-		Schema::create('srp_fleet_type', function(Blueprint $table)
-		{
-			$table->increments('fleetTypeID')->unsigned();
-			$table->string('fleetTypeName')->unique();
-
-			$table->timestamps();
-			$table->softDeletes();
-		});
-	}
-
-	/*
-	|--------------------------------------------------------------------------
-	| up()
-	|--------------------------------------------------------------------------
-	|
-	| Reverses the migration.
-	|
-	*/
-	public function down()
-	{
-		Schema::dropIfExists('srp_fleet_type');
-	}
-
+class SrpInvType extends Eloquent
+{
+	protected $fillable = array();
+	protected $table = 'invTypes';
+	protected $primaryKey = 'typeID';
+	protected $softDelete = false;
 }

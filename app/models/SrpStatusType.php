@@ -25,8 +25,13 @@ SOFTWARE.
 
 class SrpStatusType extends Eloquent
 {
-	protected $fillable   = array('statusTypeName', 'statusTypeTag');
-	protected $table      = 'srp_status_type';
-	protected $primaryKey = 'statusTypeID';
+	protected $fillable   = array('name', 'tag');
+	protected $table      = 'srp_status_types';
+	protected $primaryKey = 'id';
 	protected $softDelete = true;
+
+	public function statuses()
+	{
+		return $this->hasMany('SrpRequestStatus', 'statusTypeID', 'id');
+	}
 }

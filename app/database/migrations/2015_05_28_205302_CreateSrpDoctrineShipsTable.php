@@ -23,10 +23,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class SrpKill extends Eloquent
-{
-	protected $fillable   = array('killID', 'killTime', 'solarSystemID', 'moonID', 'shipTypeID', 'characterID', 'corporationID', 'allianceID', 'factionID', 'damageTaken', 'hash', 'totalValue', 'points');
-	protected $table      = 'srp_kill';
-	protected $primaryKey = 'killID';
-	protected $softDelete = true;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateSrpDoctrineShipsTable extends Migration {
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migration.
+	|
+	*/
+	public function up()
+	{
+		Schema::create('srp_doctrine_ships', function(Blueprint $table)
+		{
+			$table->integer('doctrineID')->unsigned();
+			$table->integer('shipID')->unsigned();
+
+			$table->primary(array('doctrineID', 'shipID'));
+		});
+	}
+
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
+	{
+		Schema::dropIfExists('srp_doctrine_ships');
+	}
+
 }

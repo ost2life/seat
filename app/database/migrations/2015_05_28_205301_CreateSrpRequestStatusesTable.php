@@ -23,16 +23,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class SrpShipType extends Eloquent
-{
-	protected $fillable = array('shipTypeID', 'shipTypeName', 'shipTypeValue');
-	protected $table = 'srp_ship_type';
-	protected $primaryKey = 'shipTypeID';
-	protected $softDelete = true;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-	public function scopeWithTypeName($query) {
-		$query
-			->select('srp_ship_type.shipTypeID', 'invTypes.typeName AS shipTypeName', 'srp_ship_type.shipTypeValue')
-			->join('invTypes', 'invTypes.typeID', '=', 'srp_ship_type.shipTypeID');
+class CreateSrpRequestStatusesTable extends Migration {
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migration.
+	|
+	*/
+	public function up()
+	{
+		Schema::create('srp_request_statuses', function(Blueprint $table)
+		{
+			$table->increments('id')->unsigned();
+			$table->string('notes')->nullable();
+			$table->decimal('value', 15, 2)->default(0.00);
+			$table->integer('characterID')->unsigned();
+			$table->integer('requestID')->unsigned();
+			$table->integer('statusTypeID')->unsigned();
+
+			$table->timestamps();
+			$table->softDeletes();
+		});
 	}
+
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
+	{
+		Schema::dropIfExists('srp_request_statuses');
+	}
+
 }

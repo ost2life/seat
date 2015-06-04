@@ -23,30 +23,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class SrpFleet extends Eloquent
-{
-	protected $fillable   = array('code', 'characterID', 'fleetTypeID');
-	protected $table      = 'srp_fleets';
-	protected $primaryKey = 'id';
-	protected $softDelete = true;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-	public function character()
+class CreateSrpStatusTypesTable extends Migration {
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migrations.
+	|
+	*/
+	public function up()
 	{
-		return $this->hasOne('EveAccountAPIKeyInfoCharacters', 'characterID', 'characterID');
+		Schema::create('srp_status_types', function(Blueprint $table)
+		{
+			$table->increments('id')->unsigned();
+			$table->string('name')->unique();
+			$table->string('tag');
+
+			$table->timestamps();
+			$table->softDeletes();
+		});
 	}
 
-	public function doctrines()
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
 	{
-		return $this->belongsToMany('SrpDoctrine', 'srp_fleet_doctrines', 'fleetID', 'doctrineID');
+		Schema::dropIfExists('srp_status_types');
 	}
 
-	public function type()
-	{
-		return $this->hasOne('SrpFleetType', 'id', 'fleetTypeID');
-	}
-
-	public function requests()
-	{
-		return $this->hasMany('SrpRequest', 'fleetID', 'id');
-	}
 }

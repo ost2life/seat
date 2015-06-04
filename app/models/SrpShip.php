@@ -23,43 +23,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
+class SrpShip extends Eloquent
+{
+	protected $fillable = array('name', 'value', 'typeID');
+	protected $table = 'srp_ships';
+	protected $primaryKey = 'id';
+	protected $softDelete = true;
 
-class CreateSrpRequestTable extends Migration {
-	/*
-	|--------------------------------------------------------------------------
-	| up()
-	|--------------------------------------------------------------------------
-	|
-	| Runs the migration.
-	|
-	*/
-	public function up()
+	public function doctrines()
 	{
-		Schema::create('srp_request', function(Blueprint $table)
-		{
-			$table->increments('requestID')->unsigned();
-			$table->integer('requestCharacterID')->unsigned();
-			$table->integer('fleetID')->unsigned();
-			$table->integer('killID')->unsigned()->unique();
-
-			$table->timestamps();
-			$table->softDeletes();
-		});
+		return $this->belongsToMany('SrpDoctrine', 'srp_doctrine_ships', 'shipID', 'doctrineID');
 	}
 
-	/*
-	|--------------------------------------------------------------------------
-	| up()
-	|--------------------------------------------------------------------------
-	|
-	| Reverses the migration.
-	|
-	*/
-	public function down()
+	public function type()
 	{
-		Schema::dropIfExists('srp_request');
+		return $this->hasOne('SrpInvType', 'typeID', 'typeID');
 	}
-
 }

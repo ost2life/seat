@@ -26,7 +26,8 @@ SOFTWARE.
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSrpStatusTable extends Migration {
+class CreateSrpShipsTable extends Migration {
+
 	/*
 	|--------------------------------------------------------------------------
 	| up()
@@ -37,19 +38,18 @@ class CreateSrpStatusTable extends Migration {
 	*/
 	public function up()
 	{
-		Schema::create('srp_status', function(Blueprint $table)
+		Schema::create('srp_ships', function(Blueprint $table)
 		{
-			$table->increments('statusID')->unsigned();
-			$table->integer('statusCharacterID')->unsigned();
-			$table->decimal('statusValue', 15, 2)->default(0.00);
-			$table->text('statusNotes');
-			$table->integer('statusTypeID')->unsigned();
-			$table->integer('requestID')->unsigned();
+			$table->increments('id')->unsigned();
+			$table->string('name');
+			$table->decimal('value', 15, 2)->default(0.00);
+			$table->integer('typeID')->unsigned();
 
 			$table->timestamps();
 			$table->softDeletes();
 		});
 	}
+
 
 	/*
 	|--------------------------------------------------------------------------
@@ -61,7 +61,7 @@ class CreateSrpStatusTable extends Migration {
 	*/
 	public function down()
 	{
-		Schema::dropIfExists('srp_status');
+		Schema::dropIfExists('srp_ship_types');
 	}
 
 }

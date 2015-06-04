@@ -35,27 +35,28 @@ class SrpSeeder extends Seeder
 	*/
 	public function run()
 	{
-		// Seed fleetTypes.
-		DB::table('srp_fleet_type')->truncate();
-		SrpFleetType::create(array('fleetTypeName' => 'Defense'));
-		SrpFleetType::create(array('fleetTypeName' => 'Fun'));
-		SrpFleetType::create(array('fleetTypeName' => 'Roam'));
-		SrpFleetType::create(array('fleetTypeName' => 'Stratop'));
-		SrpFleetType::create(array('fleetTypeName' => 'Structure Bash'));
+		// Seed fleet types
+		DB::table('srp_fleet_types')->truncate();
+		SrpFleetType::create(array('name' => 'Defense'       , 'public' => true ));
+		SrpFleetType::create(array('name' => 'Fun'           , 'public' => true ));
+		SrpFleetType::create(array('name' => 'Stratop'       , 'public' => false));
+		SrpFleetType::create(array('name' => 'Structure Bash', 'public' => true ));
 
-		// Seed statusTypes.
-		DB::table('srp_status_type')->truncate();
-		SrpStatusType::create(array('statusTypeName' => 'Rejected', 'statusTypeTag' => 'danger'));
-		SrpStatusType::create(array('statusTypeName' => 'Evaluating', 'statusTypeTag' => 'warning'));
-		SrpStatusType::create(array('statusTypeName' => 'Approved', 'statusTypeTag' => 'primary'));
-		SrpStatusType::create(array('statusTypeName' => 'Paid', 'statusTypeTag' => 'success'));
+		// Seed status types
+		DB::table('srp_status_types')->truncate();
+		SrpStatusType::create(array('name' => 'Processing', 'tag' => 'default'));
+		SrpStatusType::create(array('name' => 'Evaluating', 'tag' => 'warning'));
+		SrpStatusType::create(array('name' => 'Rejected'  , 'tag' => 'danger' ));
+		SrpStatusType::create(array('name' => 'Approved'  , 'tag' => 'primary'));
+		SrpStatusType::create(array('name' => 'Paid'      , 'tag' => 'success'));
 
-		// Seed permissions.
-		Eloquent::unguard();
-		SeatPermissions::firstOrCreate(array('permission' => 'srp_admin'));
-		SeatPermissions::firstOrCreate(array('permission' => 'srp_manager'));
+		// Seed permissions
+        Eloquent::unguard();
+		SeatPermissions::create(array('permission' => 'srp_configure'));
+		SeatPermissions::create(array('permission' => 'srp_command'));
+		SeatPermissions::create(array('permission' => 'srp_review'));
+		SeatPermissions::create(array('permission' => 'srp_pay'));
 
-		// Done.
 		$this->command->info('SRP tables seeded!');
 	}
 }

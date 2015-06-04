@@ -23,10 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class SrpFleet extends Eloquent
+class SrpRequestStatus extends Eloquent
 {
-	protected $fillable   = array('code', 'characterID', 'fleetTypeID');
-	protected $table      = 'srp_fleets';
+	protected $fillable   = array('notes', 'value', 'characterID', 'requestID', 'statusTypeID');
+	protected $table      = 'srp_request_statuses';
 	protected $primaryKey = 'id';
 	protected $softDelete = true;
 
@@ -35,18 +35,13 @@ class SrpFleet extends Eloquent
 		return $this->hasOne('EveAccountAPIKeyInfoCharacters', 'characterID', 'characterID');
 	}
 
-	public function doctrines()
+	public function request()
 	{
-		return $this->belongsToMany('SrpDoctrine', 'srp_fleet_doctrines', 'fleetID', 'doctrineID');
+		return $this->hasOne('SrpRequestStatus', 'id', 'requestID');
 	}
 
 	public function type()
 	{
-		return $this->hasOne('SrpFleetType', 'id', 'fleetTypeID');
-	}
-
-	public function requests()
-	{
-		return $this->hasMany('SrpRequest', 'fleetID', 'id');
+		return $this->hasOne('SrpStatusType', 'id', 'statusTypeID');
 	}
 }

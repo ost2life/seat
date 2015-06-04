@@ -26,7 +26,7 @@ SOFTWARE.
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSrpKillTable extends Migration {
+class CreateSrpFleetsTable extends Migration {
 	/*
 	|--------------------------------------------------------------------------
 	| up()
@@ -37,24 +37,12 @@ class CreateSrpKillTable extends Migration {
 	*/
 	public function up()
 	{
-		Schema::create('srp_kill', function(Blueprint $table)
+		Schema::create('srp_fleets', function(Blueprint $table)
 		{
-			// root
-			$table->integer ('killID')->unsigned()->primary();
-			$table->datetime('killTime');
-			$table->integer ('solarSystemID')->unsigned();
-			$table->integer ('moonID')->unsigned();
-			// victim
-			$table->integer ('shipTypeID')->unsigned();
-			$table->integer ('characterID')->unsigned();
-			$table->integer ('corporationID')->unsigned();
-			$table->integer ('allianceID')->unsigned();
-			$table->integer ('factionID')->unsigned();
-			$table->integer ('damageTaken')->unsigned();
-			// zkb
-			$table->string  ('hash');
-			$table->decimal ('totalValue', 15, 2);
-			$table->integer ('points')->unsigned();
+			$table->increments('id')->unsigned();
+			$table->string('code')->unique();
+			$table->integer('characterID')->unsigned();
+			$table->integer('fleetTypeID')->unsigned();
 
 			$table->timestamps();
 			$table->softDeletes();
@@ -71,7 +59,7 @@ class CreateSrpKillTable extends Migration {
 	*/
 	public function down()
 	{
-		Schema::dropIfExists('srp_kill');
+		Schema::dropIfExists('srp_fleets');
 	}
 
 }

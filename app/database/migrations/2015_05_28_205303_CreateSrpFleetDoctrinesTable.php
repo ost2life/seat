@@ -26,7 +26,7 @@ SOFTWARE.
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSrpFleetTable extends Migration {
+class CreateSrpFleetDoctrinesTable extends Migration {
 	/*
 	|--------------------------------------------------------------------------
 	| up()
@@ -37,15 +37,11 @@ class CreateSrpFleetTable extends Migration {
 	*/
 	public function up()
 	{
-		Schema::create('srp_fleet', function(Blueprint $table)
+		Schema::create('srp_fleet_doctrines', function(Blueprint $table)
 		{
-			$table->increments('fleetID')->unsigned();
-			$table->integer('fleetCharacterID')->unsigned();
-			$table->integer('fleetTypeID')->unsigned();
-			$table->string('fleetSrpCode')->unique();
-
-			$table->timestamps();
-			$table->softDeletes();
+			$table->integer('doctrineID')->unsigned();
+			$table->integer('fleetID')->unsigned();
+			$table->primary(array('doctrineID', 'fleetID'));
 		});
 	}
 
@@ -59,7 +55,7 @@ class CreateSrpFleetTable extends Migration {
 	*/
 	public function down()
 	{
-		Schema::dropIfExists('srp_fleet');
+		Schema::dropIfExists('srp_fleet_doctrines');
 	}
 
 }

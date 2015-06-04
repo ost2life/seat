@@ -25,8 +25,33 @@ SOFTWARE.
 
 class SrpRequest extends Eloquent
 {
-	protected $fillable   = array('requestCharacterID', 'fleetID', 'killID');
-	protected $table      = 'srp_request';
-	protected $primaryKey = 'requestID';
+	protected $fillable   = array('characterID', 'fleetID', 'killID');
+	protected $table      = 'srp_requests';
+	protected $primaryKey = 'id';
 	protected $softDelete = true;
+
+	public function character()
+	{
+		return $this->hasOne('EveAccountAPIKeyInfoCharacters', 'characterID', 'characterID');
+	}
+
+	public function fleet()
+	{
+		return $this->hasOne('SrpFleet', 'id', 'fleetID');
+
+	}
+
+	public function killmail()
+	{
+		return $this->hasOne('EveCharacterKillMails', 'killID', 'killID');
+	}
+
+	public function ship() {
+		return SrpInvType::where('typeID', '=', $this->killmail()->first()->detail()->first()->shipTypeID);
+	}
+
+	public function statuses()
+	{
+		return $this->hasMany('SrpRequestStatus', 'requestID', 'id');
+	}
 }
