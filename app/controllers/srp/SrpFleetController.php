@@ -27,6 +27,23 @@ use Seat\Services\Helpers\SrpHelper;
 
 class SrpFleetController extends \BaseController
 {
+	protected $characters;
+	protected $fleet_types;
+	protected $fleets;
+
+	/*
+	|--------------------------------------------------------------------------
+	| ownsFleet()
+	|--------------------------------------------------------------------------
+	|
+	| Checks if a user owns a fleet.
+	|
+	*/
+	private static function ownsFleet(SrpFleet $fleet)
+	{
+		$characters = $this->characters->lists('characterID');
+		return in_array($fleet->characterID, $characters) == 1;
+	}
 
 	/*
 	|--------------------------------------------------------------------------
@@ -38,8 +55,18 @@ class SrpFleetController extends \BaseController
 	*/
 	public function __construct()
 	{
-		if (SrpHelper::getAvailableFleetTypes()->count() == 0) {
-			App::abort(404); }
+		$this->characters = SrpHelper::getCharacters();
+
+		$this->fleet_types = SrpHelper::canCommand()
+			? SrpFleetType::all()
+			: SrpFleetType::where('public', '=', true)->get();
+
+		$this->fleets = SrpHelper::canReview() || SrpHelper::canPay() || SrpHelper::canCommand()
+			? SrpFleet::all()
+			: SrpFleet::whereIn('characterID', $this->characters->lists('characterID'))->get();
+
+		// Return 404 if the user is not allowed to command a fleet
+		if ($this->fleet_types->count() == 0) { App::abort(404); }
 	}
 
 
@@ -51,13 +78,13 @@ class SrpFleetController extends \BaseController
 	| Display a listing of the resource.
 	|
 	*/
-	public function index($all = null)
+	public function index()
 	{
-		$characters = array_flip(SrpHelper::getCharacters()->lists('characterID', 'characterName'));
-		$fleet_types = array_flip(SrpHelper::getAvailableFleetTypes()->lists('id', 'name'));
-		$fleets = !!$all && SrpHelper::canReview() || SrpHelper::canPay() || SrpHelper::canCommand()
-			? SrpFleet::all()
-			: SrpFleet::whereIn('characterID', array_keys($characters))->get();
+		$characters = array_flip($this->characters->lists('characterID', 'characterName'));
+
+		$fleet_types = array_flip($this->fleet_types->lists('id', 'name'));
+
+		$fleets = $this->fleets;
 
 		return view::make('srp.fleet.index')
 			->with('characters', $characters)
@@ -91,6 +118,7 @@ class SrpFleetController extends \BaseController
 	*/
 	public function store()
 	{
+		// Validate input
 		$validator = Validator::make(Input::all(), array(
 			'commander' => 'required|integer|min:1',
 			'type' => 'required|integer|min:1',
@@ -103,11 +131,13 @@ class SrpFleetController extends \BaseController
 				->withInput(Input::all()); }
 
 		try {
+			// Insert fleet
 			$fleet = SrpFleet::create(array(
 				'code' => Input::get('code'),
 				'characterID' => Input::get('commander'),
 				'fleetTypeID' => Input::get('type'),
 			));
+
 			Session::flash('success', "Your fleet has been was created."); }
 
 		catch (PDOException $e) { switch ($e->getCode()) {
@@ -141,13 +171,14 @@ class SrpFleetController extends \BaseController
 	*/
 	public function show($id)
 	{
-		if (!$fleet = SrpFleet::find($id)) {
-			App::abort(404); }
+		// Fleet must exist
+		if (!$fleet = SrpFleet::find($id)) { App::abort(404); }
 
-		if (!SrpHelper::canCommand() && !SrpHelper::ownsFleet($fleet)) {
-			App::abort(404); }
+		// Must own or have permission to modify the fleet
+		if (!SrpHelper::canCommand() || !SrpHelper::ownsFleet($fleet)) { App::abort(404); }
 
 		$assigned_doctrines = $fleet->doctrines()->get();
+
 		$available_doctrines = SrpDoctrine::whereNotIn('id', $assigned_doctrines->count()
 			? $assigned_doctrines->lists('id')
 			: array(0))->get();
@@ -184,29 +215,30 @@ class SrpFleetController extends \BaseController
 	*/
 	public function update($id)
 	{
-		if (!$fleet = SrpFleet::find($id)) {
-			App::abort(404); }
+		// Fleet must exist
+		if (!$fleet = SrpFleet::find($id)) { App::abort(404); }
 
-		if (!SrpHelper::canCommand() && !SrpHelper::ownsFleet($fleet)) {
-			App::abort(404); }
-
-		// Validate input
-		$validator = Validator::make(Input::all(), array(
-			'doctrine' => 'required|integer',
-		));
-
-		if ($validator->fails()) {
-			return Redirect::back()
-				->withErrors($validator->errors())
-				->withInput(Input::all()); }
-
-		if (Input::exists('doctrine') && !$doctrine = SrpDoctrine::find(Input::get('doctrine'))) {
-			App::abort(404); }
+		// Must own or have permission to modify the fleet
+		if (!SrpHelper::canCommand() && !SrpHelper::ownsFleet($fleet)) { App::abort(404); }
 
 		try {
 			// Attach doctrine
 			if (Input::exists('doctrine')) {
+				// Validate input
+				$validator = Validator::make(Input::all(), array(
+					'doctrine' => 'required|integer|min:1',
+				));
+
+				if ($validator->fails()) {
+					return Redirect::back()
+						->withErrors($validator->errors())
+						->withInput(Input::all()); }
+
+				// Doctrine must exist
+				if (!$doctrine = SrpDoctrine::find(Input::get('doctrine'))) { App::abort(404); }
+
 				$fleet->doctrines()->attach($doctrine);
+
 				Session::flash('success', "{$doctrine->name} has been added to the fleet's doctrine."); } }
 
 		catch (PDOException $e) { switch ($e->getCode()) {
@@ -240,33 +272,42 @@ class SrpFleetController extends \BaseController
 	*/
 	public function destroy($id)
 	{
-		if (!$fleet = SrpFleet::find($id)) {
-			App::abort(404); }
+		// Fleet must exist
+		if (!$fleet = SrpFleet::find($id)) { App::abort(404); }
 
-		if (!SrpHelper::canCommand() && !SrpHelper::ownsFleet($fleet)) {
-			App::abort(404); }
-
-		$validator = Validator::make(Input::all(), array(
-			'doctrine' => 'integer|min:1',
-		));
-
-		if ($validator->fails()) {
-			return Redirect::back()
-				->withErrors($validator->errors())
-				->withInput(Input::all()); }
-
-		if (Input::exists('doctrine') && !$doctrine = SrpDoctrine::find(Input::get('doctrine'))) {
-			App::abort(404); }
+		// Must own or have permission to modify the fleet
+		if (!SrpHelper::canCommand() && !$this->ownsFleet($fleet)) { App::abort(404); }
 
 		// Detach doctrine
 		if (Input::exists('doctrine')) {
-			$fleet->doctrines()->detach($doctrine);
-			Session::flash('success', "{$doctrine->name} has been removed from the fleet's doctrine.");
-			return Redirect::back(); }
+			// Validate input
+			$validator = Validator::make(Input::all(), array(
+				'doctrine' => 'required|integer|min:1',
+			));
+
+			if ($validator->fails()) {
+				return Redirect::back()
+					->withErrors($validator->errors())
+					->withInput(Input::all()); }
+
+			// Doctrine must exist
+			if (!$doctrine = SrpDoctrine::find(Input::get('doctrine'))) { App::abort(404); }
+
+			// Detach doctrine
+			if (Input::exists('doctrine')) {
+				$fleet->doctrines()->detach($doctrine);
+
+				Session::flash('success', "{$doctrine->name} has been removed from the fleet's doctrine.");
+				return Redirect::back(); } }
 
 		// Delete fleet
 		else {
+			// Null the srp code so that it can be used again
+			$fleet->code = null;
+			$fleet->save();
+
 			$fleet->delete();
+
 			Session::flash('success', "The fleet has been deleted.");
 			return $this->index(); }
 	}

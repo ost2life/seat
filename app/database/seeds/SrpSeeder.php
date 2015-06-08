@@ -52,10 +52,10 @@ class SrpSeeder extends Seeder
 
 		// Seed permissions
         Eloquent::unguard();
-		SeatPermissions::create(array('permission' => 'srp_configure'));
-		SeatPermissions::create(array('permission' => 'srp_command'));
-		SeatPermissions::create(array('permission' => 'srp_review'));
-		SeatPermissions::create(array('permission' => 'srp_pay'));
+		SeatPermissions::firstOrCreate(array('permission' => 'srp_configure'));
+		SeatPermissions::firstOrCreate(array('permission' => 'srp_command'));
+		SeatPermissions::firstOrCreate(array('permission' => 'srp_review'));
+		SeatPermissions::firstOrCreate(array('permission' => 'srp_pay'));
 
 		$this->command->info('SRP tables seeded!');
 	}
