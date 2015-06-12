@@ -175,7 +175,7 @@ class SrpFleetController extends \BaseController
 		if (!$fleet = SrpFleet::find($id)) { App::abort(404); }
 
 		// Must own or have permission to modify the fleet
-		if (!SrpHelper::canCommand() || !SrpHelper::ownsFleet($fleet)) { App::abort(404); }
+		if (!SrpHelper::canCommand() && !SrpHelper::ownsFleet($fleet)) { App::abort(404); }
 
 		$assigned_doctrines = $fleet->doctrines()->get();
 
