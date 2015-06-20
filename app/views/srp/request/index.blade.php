@@ -25,8 +25,7 @@
 					<table class="table table-condensed compact table-hover" id="datatable" style="white-space: nowrap;">
 						<thead>
 							<tr>
-								<th>Last Updated</th>
-								<th>Date Lost</th>
+								<th>Created</th>
 								<th width="99%">Pilot</th>
 								<th>Ship</th>
 								<th>Value</th>
@@ -37,19 +36,19 @@
 						</thead>
 						<tbody>
 							@foreach($requests as $request)
-							<tr>
-								<td>{{ $request->statuses()->orderBy('created_at', 'DESC')->first()->created_at }}</td>
-								<td>{{ $request->killmail->detail->killTime }}</td>
-								<td>{{ $request->character->characterName }}</td>
-								<td>{{ $request->ship()->first()->typeName }}</td>
-								<td>{{ App\Services\Helpers\Helpers::formatBigNumber($request->statuses()->orderBy('created_at', 'DESC')->first()->value) }} ISK</td>
-								<td><span class="label label-{{ $request->statuses()->orderBy('created_at', 'DESC')->first()->type()->first()->tag }}" >{{ $request->statuses()->orderBy('created_at', 'DESC')->first()->type()->first()->name }}</span></td>
-								<td><a href="https://zkillboard.com/kill/{{ $request->killID }}/" target="_blank"><i class="fa fa-external-link"></i> Click Here</a></td>
-								<td><a href="{{ action('SrpRequestController@show', array($request->id)) }}" class="btn btn-default btn-xs"><i class="fa fa-eye"></i> Details</a></td>
-							</tr>
+								<tr>
+									<td>{{ $request->created_at }}</td>
+									<td>{{ $request->character->characterName }}</td>
+									<td>{{ $request->ship()->typeName }}</td>
+									<td>{{ App\Services\Helpers\Helpers::formatBigNumber($request->status()->value) }} ISK</td>
+									<td><span class="label label-{{ $request->status()->type->tag }}" >{{ $request->status()->type->name }}</span></td>
+									<td><a href="https://zkillboard.com/kill/{{ $request->killID }}/" target="_blank"><i class="fa fa-external-link"></i> Click Here</a></td>
+									<td><a href="{{ action('SrpRequestController@show', $request->id) }}" class="btn btn-default btn-xs"><i class="fa fa-eye"></i> Details</a></td>
+								</tr>
 							@endforeach
 						</tbody>
 					</table>
+					<div class="pull-right">{{ $requests->links() }}</div>
 				</div><!-- /.box-body -->
 
 			</div><!-- /.box -->

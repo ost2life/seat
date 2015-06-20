@@ -43,7 +43,7 @@
 							<tr>
 								<td>{{ $status->created_at }}</td>
 								<td>{{ $status->character->characterName }}</td>
-								<td>{{ $request->ship()->first()->typeName }}</td>
+								<td>{{ $request->ship()->typeName }}</td>
 								<td>{{ App\Services\Helpers\Helpers::formatBigNumber($status->value) }} ISK</td>
 								<td><span class="label label-{{ $status->type->tag }}" >{{ $status->type->name }}</span></td>
 								<td><a href="https://zkillboard.com/kill/{{ $request->killID }}/" target="_blank"><i class="fa fa-external-link"></i> Click Here</a></td>
@@ -97,7 +97,7 @@
 										<div class="col-md-6">
 											<div class="input-group">
 												<span class="input-group-addon"><i class="fa fa-fw fa-money"></i></span>
-												{{ Form::text('value', $request->statuses()->orderBy('created_at', 'DESC')->first()->value, array('id' => 'value', 'class' => 'form-control input-md')) }}
+												{{ Form::text('value', $request->status()->value, array('id' => 'value', 'class' => 'form-control input-md')) }}
 											</div>
 										</div>
 									</div>

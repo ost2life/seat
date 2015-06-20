@@ -23,49 +23,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Seat\Services\Helpers\SrpHelper;
+class SrpCharacter {
 
-class SrpRequest extends Eloquent
-{
-	protected $fillable   = array('characterID', 'fleetID', 'killID');
-	protected $table      = 'srp_requests';
-	protected $primaryKey = 'id';
-	protected $softDelete = true;
-
-	public function scopeAvailable($query, SrpCharacter $character)
+	public function all()
 	{
-		if (SrpHelper::canReview() || SrpHelper::canPay()) {
-			return $query; }
-		else {
-			return $query->whereIn('characterID', $character->self()->lists('characterID'));	}
+		return EveAccountAPIKeyInfoCharacters::all();
 	}
 
-	public function character()
+	public function self()
 	{
-		return $this->hasOne('EveAccountAPIKeyInfoCharacters', 'characterID', 'characterID');
+		return EveAccountAPIKeyInfoCharacters::whereIn('keyID', Auth::user()->keys()->lists('keyID'));
 	}
 
-	public function fleet()
-	{
-		return $this->hasOne('SrpFleet', 'id', 'fleetID');
-	}
-
-	public function killmail()
-	{
-		return $this->hasOne('EveCharacterKillMails', 'killID', 'killID');
-	}
-
-	public function ship() {
-		return SrpInvType::where('typeID', '=', $this->killmail->detail->shipTypeID)->first();
-	}
-
-	public function statuses()
-	{
-		return $this->hasMany('SrpRequestStatus', 'requestID', 'id');
-	}
-
-	public function status()
-	{
-		return $this->statuses()->orderBy('created_at', 'DESC')->first();
-	}
 }

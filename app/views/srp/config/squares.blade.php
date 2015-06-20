@@ -2,7 +2,7 @@
 	<!-- small box -->
 	<div class="small-box bg-maroon">
 		<div class="inner">
-			<h3>{{ number_format($total_fleet_types, 0, $settings['decimal_seperator'], $settings['thousand_seperator']) }}</h3>
+			<h3>{{ number_format($fleet_type_count, 0, $settings['decimal_seperator'], $settings['thousand_seperator']) }}</h3>
 			<p>Fleet Types</p>
 		</div>
 		<div class="icon">
@@ -18,7 +18,7 @@
 	<!-- small box -->
 	<div class="small-box bg-maroon">
 		<div class="inner">
-			<h3>{{ number_format($total_ships, 0, $settings['decimal_seperator'], $settings['thousand_seperator']) }}</h3>
+			<h3>{{ number_format($ship_count, 0, $settings['decimal_seperator'], $settings['thousand_seperator']) }}</h3>
 			<p>Ships</p>
 		</div>
 		<div class="icon">
@@ -34,7 +34,7 @@
 	<!-- small box -->
 	<div class="small-box bg-maroon">
 		<div class="inner">
-			<h3>{{ number_format($total_doctrines, 0, $settings['decimal_seperator'], $settings['thousand_seperator']) }}</h3>
+			<h3>{{ number_format($doctrine_count, 0, $settings['decimal_seperator'], $settings['thousand_seperator']) }}</h3>
 			<p>Doctrines</p>
 		</div>
 		<div class="icon">

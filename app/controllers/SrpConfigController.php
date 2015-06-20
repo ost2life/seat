@@ -23,10 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Seat\Services\Helpers\SrpHelper;
-
-class SrpConfigController extends \BaseController
+class SrpConfigController extends BaseController
 {
+
+	// Models
+	protected $srp_doctrine;
+	protected $srp_fleet_type;
+	protected $srp_ship;
 
 	/*
 	|--------------------------------------------------------------------------
@@ -36,9 +39,18 @@ class SrpConfigController extends \BaseController
 	| Constructs the class.
 	|
 	*/
-	public function __construct()
+	public function __construct(
+		SrpDoctrine $srp_doctrine,
+		SrpFleetType $srp_fleet_type,
+		SrpShip $srp_ship)
 	{
-		if (!SrpHelper::canConfigure()) {
+		// Models
+		$this->srp_doctrine = $srp_doctrine;
+		$this->srp_fleet_type = $srp_fleet_type;
+		$this->srp_ship = $srp_ship;
+
+		// Must have permission to configure
+		if (!Auth::hasAccess('srp_configure')) {
 			App::abort(404); }
 	}
 
@@ -53,11 +65,11 @@ class SrpConfigController extends \BaseController
 	*/
 	public function index()
 	{
+		// Return
 		return View::make('srp.config.index')
-			->with('total_doctrines', SrpDoctrine::all()->count())
-			->with('total_fleet_types', SrpFleetType::all()->count())
-			->with('total_ships', SrpShip::all()->count())
-		;
+			->with('doctrine_count', $this->srp_doctrine->count())
+			->with('fleet_type_count', $this->srp_fleet_type->count())
+			->with('ship_count', $this->srp_ship->count());
 	}
 
 

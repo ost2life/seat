@@ -143,9 +143,7 @@
 								url: delete_item,
 								type: 'DELETE',
 								success: function(result) {
-									document.open();
-									document.write(result);
-									document.close();
+									location.reload();
 								}
 							});
 						}

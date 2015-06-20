@@ -47,8 +47,8 @@
 							@endforeach
 						</tbody>
 					</table>
+					<div class="pull-right">{{ $fleets->links() }}</div>
 				</div><!-- /.box-body -->
-
 			</div><!-- /.box -->
 
 		</div><!-- /.col -->

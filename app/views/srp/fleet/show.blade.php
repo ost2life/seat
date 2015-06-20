@@ -37,13 +37,13 @@
 							</tr>
 						</thead>
 						<tbody>
-							@foreach($requests as $request)
+							@foreach($fleet->requests as $request)
 							<tr>
 								<td>{{ $request->created_at }}</td>
 								<td>{{ $request->character->characterName }}</td>
-								<td>{{ $request->ship()->first()->typeName }}</td>
-								<td>{{ App\Services\Helpers\Helpers::formatBigNumber($request->statuses()->orderBy('created_at', 'DESC')->first()->value) }} ISK</td>
-								<td><span class="label label-{{ $request->statuses()->orderBy('created_at', 'DESC')->first()->type()->first()->tag }}">{{ $request->statuses()->orderBy('created_at', 'DESC')->first()->type()->first()->name }}</span></td>
+								<td>{{ $request->ship()->typeName }}</td>
+								<td>{{ App\Services\Helpers\Helpers::formatBigNumber($request->status()->value) }} ISK</td>
+								<td><span class="label label-{{ $request->status()->type->tag }}">{{ $request->status()->type->name }}</span></td>
 								<td><a href="https://zkillboard.com/kill/{{ $request->killID }}/" target="_blank"><span class="fa fa-external-link"></span> Click Here</a></td>
 								@if (Seat\Services\Helpers\SrpHelper::canReview() || Seat\Services\Helpers\SrpHelper::canPay())
 									<td><a href="{{ action('SrpRequestController@show', array('id' => $request->id)) }}" class="btn btn-default btn-xs"><i class="fa fa-eye"></i> Details</a></td>
@@ -151,7 +151,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							@foreach($available_doctrines as $doctrine)
+							@foreach($doctrines as $doctrine)
 							<tr>
 								<td>
 									{{ Form::open(array('action' => array('SrpFleetController@update', $fleet->id), 'method' => 'PUT')) }}

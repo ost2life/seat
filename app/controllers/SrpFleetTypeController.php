@@ -23,10 +23,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Seat\Services\Helpers\SrpHelper;
+use App\Services\Validators\SrpFleetTypeValidator;
 
-class SrpFleetTypeController extends \BaseController
+class SrpFleetTypeController extends BaseController
 {
+
+	// Models
+	protected $srp_fleet_type;
+
+	// Validators
+	protected $srp_fleet_type_validator;
 
 	/*
 	|--------------------------------------------------------------------------
@@ -36,9 +42,18 @@ class SrpFleetTypeController extends \BaseController
 	| Constructs the class.
 	|
 	*/
-	public function __construct()
+	public function __construct(
+		SrpFleetType $srp_fleet_type,
+		SrpFleetTypeValidator $srp_fleet_type_validator)
 	{
-		if (!SrpHelper::canConfigure()) {
+		// Models
+		$this->srp_fleet_type = $srp_fleet_type;
+
+		// Validators
+		$this->srp_fleet_type_validator = $srp_fleet_type_validator;
+
+		// Must have permission to configure
+		if (!Auth::hasAccess('srp_configure')) {
 			App::abort(404); }
 	}
 
@@ -53,8 +68,12 @@ class SrpFleetTypeController extends \BaseController
 	*/
 	public function index()
 	{
-		return view::make('srp.config.fleet.index')
-			->with('fleet_types', SrpFleetType::all());
+		// View data
+		$fleet_types = $this->srp_fleet_type->all();
+
+		// Return
+		return View::make('srp.config.fleet.index')
+			->with('fleet_types', $fleet_types);
 	}
 
 
@@ -82,48 +101,34 @@ class SrpFleetTypeController extends \BaseController
 	*/
 	public function store()
 	{
-		$validator = Validator::make(Input::all(), array(
-			'name' => 'required|min:3|max:20',
-			'public' => 'required|integer|min:0|max:1',
-		));
-
-		if ($validator->fails()) {
-			return Redirect::back()
-				->withErrors($validator->errors())
-				->withInput(Input::all()); }
-
-		try {
-			$fleet_type = SrpFleetType::create(Input::all());
-			Session::flash('success', "{$fleet_type->name} has been created."); }
-
-		catch (PDOException $e) { switch ($e->getCode()) {
-
-			case 23000: // Integrity Constraint Violation
-				$fleet_type = SrpFleetType::withTrashed()
-					->where('name', '=', Input::get('name'))
-					->first();
-
-				if ($fleet_type->trashed()) {
-					$fleet_type->fill(Input::all());
-					$fleet_type->restore();
-					Session::flash('success', "{$fleet_type->name} has been restored.");
-					break; }
-
-				return Redirect::back()
-					->withErrors("The name 'That fleet type already exists.")
-					->withInput();
-
-				default:
-					return Redirect::back()
-						->withErrors('A database error has occurred.')
-						->withInput(); } }
-
-		catch (Exception $e) {
-			return Redirect::back()
-				->withErrors('An unknown error has occurred.')
+		// Validate input
+		if (!$this->srp_fleet_type_validator->passes()) {
+			return Redirect::action('SrpFleetTypeController@index')
+				->withErrors($this->srp_fleet_type_validator->errors)
 				->withInput(); }
 
-		return Redirect::back();
+		// Check if name is free
+		$fleet_type = $this->srp_fleet_type
+			->where('name', '=', Input::get('name'))
+			->withTrashed()
+			->first();
+
+		if ($fleet_type && !$fleet_type->trashed()) {
+			return Redirect::action('SrpFleetTypeController@index')
+				->withErrors("The fleet type '{$fleet_type->name}' already exists.")
+				->withInput(); }
+
+		// Restore
+		if ($fleet_type->trashed()) {
+			$fleet_type->fill(Input::all());
+			$fleet_type->restore(); }
+
+		// Create
+		else {
+			$fleet_type = $this->srp_fleet_type->create(Input::all()); }
+
+		return Redirect::action('SrpFleetTypeController@index')
+			->with('success', "The fleet type '{$fleet_type->name}' was created.");
 	}
 
 
@@ -137,12 +142,15 @@ class SrpFleetTypeController extends \BaseController
 	*/
 	public function show($id)
 	{
-		if (!$fleet_type = SrpFleetType::find($id)) {
-			App::abort(404); }
+		// Fleet type must exist
+		if (!$fleet_type = $this->srp_fleet_type->find($id)) {
+			return Redirect::action('SrpFleetTypeController@index')
+				->withErrors('That fleet type does not exist.')
+				->withInput(); }
 
-		return view::make('srp.config.fleet.show')
-			->with('fleet_type', $fleet_type)
-		;
+		// Return
+		return View::make('srp.config.fleet.show')
+			->with('fleet_type', $fleet_type);
 	}
 
 
@@ -170,42 +178,35 @@ class SrpFleetTypeController extends \BaseController
 	*/
 	public function update($id)
 	{
-		$validator = Validator::make(Input::all(), array(
-			'name' => 'required_without:character|min:3|max:20',
-			'public' => 'required_without:character|integer|min:0|max:1',
-		));
-
-		if ($validator->fails()) {
-			return Redirect::back()
-				->withErrors($validator->errors())
-				->withInput(Input::all()); }
-
-		if (!$fleet_type = SrpFleetType::find($id)) {
-			App::abort(404); }
-
-		try {
-			$fleet_type->fill(Input::all());
-			$fleet_type->save();
-			Session::flash('success', "{$fleet_type->name} has been updated."); }
-
-		catch (PDOException $e) { switch ($e->getCode()) {
-
-			case 23000: // Integrity Constraint Violation
-				return Redirect::back()
-					->withErrors("{$fleet_type->name} already exists.")
-					->withInput();
-
-				default:
-					return Redirect::back()
-						->withErrors('A database error has occurred.')
-						->withInput(); } }
-
-		catch (Exception $e) {
-			return Redirect::back()
-				->withErrors('An unknown error has occurred.')
+		// Validate input
+		if (!$this->srp_fleet_type_validator->passes()) {
+			return Redirect::action('SrpFleetTypeController@index')
+				->withErrors($this->srp_fleet_type_validator->errors)
 				->withInput(); }
 
-		return Redirect::back();
+		// Fleet type must exist
+		if (!$fleet_type = $this->srp_fleet_type->find($id)) {
+			return Redirect::action('SrpFleetTypeController@index')
+				->withErrors('That fleet type does not exist.')
+				->withInput(); }
+
+		// Check if name is free
+		$fleet_type = $this->srp_fleet_type->where('name', '=', Input::get('name'))
+			->withTrashed()
+			->first();
+
+		if ($fleet_type && !$fleet_type->trashed()) {
+			return Redirect::action('SrpFleetTypeController@show', $id)
+				->withErrors("The fleet type '{$fleet_type->name}' already exists.")
+				->withInput(); }
+
+		// Update
+		$fleet_type->fill(Input::all());
+		$fleet_type->save();
+
+		// Return
+		return Redirect::action('SrpFleetTypeController@show', $id)
+			->with('success', "This fleet type was updated.");
 	}
 
 
@@ -219,13 +220,18 @@ class SrpFleetTypeController extends \BaseController
 	*/
 	public function destroy($id, $data = null)
 	{
-		if (!$fleet_type = SrpFleetType::find($id)) {
-			App::abort(404); }
+		// Fleet type must exist
+		if (!$fleet_type = $this->srp_fleet_type->find($id)) {
+			return Redirect::action('SrpFleetTypeController@index')
+				->withErrors('That fleet type does not exist.')
+				->withInput(); }
 
+		// Delete fleet type
 		$fleet_type->delete();
 
-		Session::flash('success', "{$fleet_type->name} has been deleted.");
-		return $this->index();
+		// Return
+		Session::flash('success', "The fleet type '{$fleet_type->name}' was deleted.");
+		return Response::make(null, 204);
 	}
 
 }

@@ -23,12 +23,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use Seat\Services\Helpers\SrpHelper;
+
 class SrpStatusType extends Eloquent
 {
 	protected $fillable   = array('name', 'tag');
 	protected $table      = 'srp_status_types';
 	protected $primaryKey = 'id';
 	protected $softDelete = true;
+
+	public function available()
+	{
+		if (SrpHelper::canPay()) {
+			return $this->whereIn('id', array(2, 3, 4, 5)); }
+		else if (SrpHelper::canReview()) {
+			return $this->whereIn('id', array(2, 3, 4)); }
+		else {
+			return $this->whereIn('id', array(0)); }
+	}
 
 	public function statuses()
 	{

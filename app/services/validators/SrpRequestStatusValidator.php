@@ -23,40 +23,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use Seat\Services\Helpers\SrpHelper;
+namespace App\Services\Validators;
 
-class SrpFleet extends Eloquent
+class SrpRequestStatusValidator extends Validator
 {
-	protected $fillable   = array('code', 'characterID', 'fleetTypeID');
-	protected $table      = 'srp_fleets';
-	protected $primaryKey = 'id';
-	protected $softDelete = true;
 
-	public function scopeAvailable($query, SrpCharacter $character)
-	{
-		if (SrpHelper::canReview() || SrpHelper::canPay()) {
-			return $query; }
-		else {
-			return $query->whereIn('characterID', $character->self()->lists('characterID')); }
-	}
+	public static $rules = array(
+		'updater' => 'required|integer',
+		'status' => 'required|integer',
+		'value' => 'required|numeric',
+		'notes' => 'min:3|max:200',
+	);
 
-	public function character()
-	{
-		return $this->hasOne('EveAccountAPIKeyInfoCharacters', 'characterID', 'characterID');
-	}
-
-	public function doctrines()
-	{
-		return $this->belongsToMany('SrpDoctrine', 'srp_fleet_doctrines', 'fleetID', 'doctrineID');
-	}
-
-	public function type()
-	{
-		return $this->hasOne('SrpFleetType', 'id', 'fleetTypeID');
-	}
-
-	public function requests()
-	{
-		return $this->hasMany('SrpRequest', 'fleetID', 'id');
-	}
 }

@@ -115,7 +115,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							@foreach($available_ships as $ship)
+							@foreach($ships as $ship)
 							<tr>
 								<td>
 									{{ Form::open(array('action' => array('SrpDoctrineController@update', $doctrine->id), 'method' => 'PUT')) }}

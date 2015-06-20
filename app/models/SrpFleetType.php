@@ -23,12 +23,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use Seat\Services\Helpers\SrpHelper;
+
 class SrpFleetType extends Eloquent
 {
 	protected $fillable   = array('name', 'public');
 	protected $table      = 'srp_fleet_types';
 	protected $primaryKey = 'id';
 	protected $softDelete = true;
+
+	public function scopeAvailable($query)
+	{
+		return SrpHelper::canCommand()
+			? $query
+			: $query->where('public', '=', true);
+	}
 
 	public function fleets()
 	{
