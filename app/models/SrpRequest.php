@@ -56,7 +56,11 @@ class SrpRequest extends Eloquent
 	}
 
 	public function ship() {
-		return SrpInvType::where('typeID', '=', $this->killmail->detail->shipTypeID)->first();
+		if ($this->killmail && $this->killmail->detail) {
+			$ship = SrpInvType::where('typeID', '=', $this->killmail->detail->shipTypeID)->first();
+			return $ship ?: SrpInvType::find(34); }
+		else {
+			return SrpInvType::find(34); }
 	}
 
 	public function statuses()
