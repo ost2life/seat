@@ -37,7 +37,7 @@ class SrpRequestStatus extends Eloquent
 
 	public function request()
 	{
-		return $this->hasOne('SrpRequestStatus', 'id', 'requestID');
+		return $this->hasOne('SrpRequest', 'id', 'requestID');
 	}
 
 	public function type()
