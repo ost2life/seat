@@ -238,9 +238,9 @@ class SrpFleetController extends BaseController
 		// Attach doctrine
 		if (Input::exists('doctrine')) {
 			// Validate input
-			if (!$this->srp_fleet_doctrine_validator->passes()) {
+			if (!$this->srp_fleet_validator->passes()) {
 				return Redirect::action('SrpFleetController@show', $id)
-					->withErrors($this->srp_fleet_doctrine_validator->errors)
+					->withErrors($this->srp_fleet_validator->errors)
 					->withInput(); }
 
 			// Doctrine must exist
