@@ -283,7 +283,7 @@ def do_main_program():
 			tags = [];
 
 			# Administrator
-			sql = "SELECT * FROM seat_group_user AS gu JOIN seat_groups AS g ON g.id = gu.group_id WHERE g.name = 'Administrators' AND gu.user_id = %s LIMIT 1"
+			sql = "SELECT * FROM seat_group_user AS gu JOIN seat_groups AS g ON g.id = gu.group_id WHERE gu.user_id = %s AND g.name = 'Administrators' OR g.name = 'MumbleAdmin' LIMIT 1"
 			cursor = ThreadDB.execute(sql, [userID])
 			dbResult = cursor.fetchone()
 			cursor.close()
