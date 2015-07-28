@@ -1,25 +1,39 @@
 #!/usr/bin/env python
-#The MIT License (MIT)
 #
-#Copyright (c) 2014 eve-seat
+# Copyright (C) 2010 Stefan Hacker <dd0t@users.sourceforge.net>
+# Copyright (C) 2015 Mike Sims <msims04@gmail.com>
+# All rights reserved.
 #
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
 #
-#The above copyright notice and this permission notice shall be included in all
-#copies or substantial portions of the Software.
+# - Redistributions of source code must retain the above copyright notice,
+#   this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# - Neither the name of the Mumble Developers nor the names of its
+#   contributors may be used to endorse or promote products derived from this
+#   software without specific prior written permission.
 #
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+#    authenticator.py - Authenticator implementation for password authenticating
+#                       a Murmur server against an EVE SeAT database
+#
+#    Requirements:
+#        * python >=2.4 and the following python modules:
+#            * ice-python
+#            * MySQLdb
+#            * daemon (when run as a daemon)
+#
 
 import logging
 import requests
@@ -35,6 +49,17 @@ from passlib.hash import bcrypt
 from threading import Timer
 
 #
+#--- x2bool
+#
+def x2bool(s):
+	"""Helper function to convert strings from the config to bool"""
+	if isinstance(s, bool):
+		return s
+	elif isinstance(s, basestring):
+		return s.lower() in ['1', 'true']
+	raise ValueError()
+
+#
 #--- Default configuration values
 #
 cfgfile = 'authenticator.ini'
@@ -46,6 +71,9 @@ default = {
 		('password', str, 'secret'),
 		('host', str, '127.0.0.1'),
 		('port', int, 3306)),
+
+	'user':(('avatar_enable', x2bool, False),
+			('reject_on_error', x2bool, True)),
 
 	'ice':(
 		('host', str, '127.0.0.1'),
@@ -145,9 +173,9 @@ class ThreadDB(object):
 	disconnect = classmethod(disconnect)
 
 #
-#--- Helper classes
+#--- Config
 #
-class config(object):
+class Config(object):
 	def __init__(self, filename = None, default = None):
 		if not filename or not default: return
 		cfg = ConfigParser.ConfigParser()
@@ -162,7 +190,7 @@ class config(object):
 				except ConfigParser.NoSectionError:
 					self.__dict__[h] = []
 			else:
-				self.__dict__[h] = config()
+				self.__dict__[h] = Config()
 				for name, conv, vdefault in v:
 					try:
 						self.__dict__[h].__dict__[name] = conv(cfg.get(h, name))
@@ -173,24 +201,129 @@ class config(object):
 #--- do_main_program
 #
 def do_main_program():
-	Ice.loadSlice('', ["-I/usr/share/Ice/slice", "Murmur.ice"])
+	#
+	#--- Authenticator implementation
+	#    All of this has to go in here so we can correctly daemonize the tool
+	#    without loosing the file descriptors opened by the Ice module
+	slicedir = Ice.getSliceDir()
+	if not slicedir:
+		slicedir = ["-I/usr/share/Ice/slice", "-I/usr/share/slice"]
+	else:
+		slicedir = ['-I' + slicedir]
+	Ice.loadSlice('', slicedir + [cfg.ice.slice])
 	import Murmur
 
 	#
-	#--- MetaCallback
+	#--- checkSecret
+	#
+	def checkSecret(func):
+		"""
+		Decorator that checks whether the server transmitted the right secret
+		if a secret is supposed to be used.
+		"""
+		if not cfg.ice.secret:
+			return func
+		
+		def newfunc(*args, **kws):
+			if 'current' in kws:
+				current = kws["current"]
+			else:
+				current = args[-1]
+			
+			if not current or 'secret' not in current.ctx or current.ctx['secret'] != cfg.ice.secret:
+				error('Server transmitted invalid secret. Possible injection attempt.')
+				raise Murmur.InvalidSecretException()
+			
+			return func(*args, **kws)
+		
+		return newfunc
+
+	#
+	#--- fortifyIceFu
+	#
+	def fortifyIceFu(retval = None, exceptions = (Ice.Exception,)):
+		"""
+		Decorator that catches exceptions, logs them and returns a safe retval
+		value. This helps preventing the authenticator getting stuck in
+		critical code paths. Only exceptions that are instances of classes
+		given in the exceptions list are not caught.
+		
+		The default is to catch all non-Ice exceptions.
+		"""
+		def newdec(func):
+			def newfunc(*args, **kws):
+				try:
+					return func(*args, **kws)
+				except Exception, e:
+					catch = True
+					for ex in exceptions:
+						if isinstance(e, ex):
+							catch = False
+							break
+
+					if catch:
+						critical('Unexpected exception caught')
+						exception(e)
+						return retval
+					raise
+
+			return newfunc
+		return newdec
+
+	#
+	#--- metaCallback
 	#
 	class MetaCallback(Murmur.MetaCallback):
 		def __init__(self, app):
 			Murmur.MetaCallback.__init__(self)
 			self.app = app
 
+		@fortifyIceFu()
+		@checkSecret
 		def started(self, server, current = None):
-			print server
-			return
+			"""
+			This function is called when a virtual server is started
+			and makes sure an authenticator gets attached if needed.
+			"""
+			if not cfg.murmur.servers or server.id() in cfg.murmur.servers:
+				info('Setting authenticator for virtual server %d', server.id())
+				try:
+					server.setAuthenticator(app.auth)
+				# Apparently this server was restarted without us noticing
+				except (Murmur.InvalidSecretException, Ice.UnknownUserException), e:
+					if hasattr(e, "unknown") and e.unknown != "Murmur::InvalidSecretException":
+						# Special handling for Murmur 1.2.2 servers with invalid slice files
+						raise e
+					
+					error('Invalid ice secret')
+					return
+			else:
+				debug('Virtual server %d got started', server.id())
 
+		@fortifyIceFu()
+		@checkSecret
 		def stopped(self, server, current = None):
-			print server
-			return
+			"""
+			This function is called when a virtual server is stopped
+			"""
+			if self.app.connected:
+				# Only try to output the server id if we think we are still connected to prevent
+				# flooding of our thread pool
+				try:
+					if not cfg.murmur.servers or server.id() in cfg.murmur.servers:
+						info('Authenticated virtual server %d got stopped', server.id())
+					else:
+						debug('Virtual server %d got stopped', server.id())
+					return
+				except Ice.ConnectionRefusedException:
+					self.app.connected = False
+			
+			debug('Server shutdown stopped a virtual server')
+	
+	if cfg.user.reject_on_error: # Python 2.4 compat
+		authenticateFortifyResult = (-1, None, None)
+	else:
+		authenticateFortifyResult = (-2, None, None)
 
 	#
 	#--- ServerCallback
@@ -255,6 +388,8 @@ def do_main_program():
 				except:
 					return '-----'
 
+		@fortifyIceFu(authenticateFortifyResult)
+		@checkSecret
 		def authenticate(self, name, pw, certificates, certhash, cerstrong, out_newname):
 			# Must have a password
 			if pw == None:
@@ -296,11 +431,18 @@ def do_main_program():
 			ticker = self.getTicker(corporationID)
 
 			# Return with formated names and groups
-			return (characterID, "[{0}] {1}".format(ticker, characterName), groups)
+			if len(tags):
+				return (characterID, "[{0}] {1} ({2})".format(ticker, characterName, '|'.join(tags)), groups)
+			else:
+				return (characterID, "[{0}] {1}".format(ticker, characterName), groups)
 
+		@fortifyIceFu((False, None))
+		@checkSecret
 		def getInfo(self, id, current = None):
 			return (False, None)
 
+		@fortifyIceFu(-2)
+		@checkSecret
 		def nameToId(self, name, current = None):
 			sql = "SELECT characterID FROM account_apikeyinfo_characters WHERE characterName = %s LIMIT 1"
 			cursor = ThreadDB.execute(sql, [name])
@@ -313,6 +455,8 @@ def do_main_program():
 			else:
 				return dbResult[0]
 
+		@fortifyIceFu("")
+		@checkSecret
 		def idToName(self, id, current = None):
 			sql = "SELECT characterName FROM account_apikeyinfo_characters WHERE characterID = %s LIMIT 1"
 			cursor = ThreadDB.execute(sql, [id])
@@ -325,15 +469,23 @@ def do_main_program():
 			else:
 				return dbResult[0]
 
+		@fortifyIceFu("")
+		@checkSecret
 		def idToTexture(self, id, current = None):
 			return None
 
+		@fortifyIceFu(-1)
+		@checkSecret
 		def registerUser(self, name, current = None):
 			return -1
 
+		@fortifyIceFu(-1)
+		@checkSecret
 		def unregisterUser(self, id, current = None):
 			return -1
 
+		@fortifyIceFu({})
+		@checkSecret
 		def getRegisteredUsers(self, filter, current = None):
 			filter = filter + "%"
 			sql = "SELECT characterID, characterName, corporationID FROM account_apikeyinfo_characters WHERE characterName LIKE %s"
@@ -348,9 +500,13 @@ def do_main_program():
 			debug("getRegisteredUsers: %d results with filter '%s'", len(dbResult), filter)
 			return dict([(a, "[{0}] {1}".format(self.getTicker(c), b)) for a, b, c in dbResult])
 
+		@fortifyIceFu(-1)
+		@checkSecret
 		def setInfo(self, id, info, current = None):
 			return -1
 
+		@fortifyIceFu(-1)
+		@checkSecret
 		def setTexture(self, id, texture, current = None):
 			return -1
 
@@ -515,7 +671,7 @@ if __name__ == '__main__':
 
 	# Load configuration
 	try:
-		cfg = config(option.ini, default)
+		cfg = Config(option.ini, default)
 	except Exception, e:
 		print>>sys.stderr, 'Fatal error, could not load config file from "%s"' % cfgfile
 		sys.exit(1)
