@@ -23,24 +23,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
-{
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+class CreateSrpDoctrineShipsTable extends Migration {
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migration.
+	|
+	*/
+	public function up()
+	{
+		Schema::create('srp_doctrine_ships', function(Blueprint $table)
+		{
+			$table->integer('doctrineID')->unsigned();
+			$table->integer('shipID')->unsigned();
+
+			$table->primary(array('doctrineID', 'shipID'));
+		});
+	}
+
+
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
+	{
+		Schema::dropIfExists('srp_doctrine_ships');
+	}
+
 }

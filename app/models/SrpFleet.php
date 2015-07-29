@@ -23,24 +23,40 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+use Seat\Services\Helpers\SrpHelper;
+
+class SrpFleet extends Eloquent
 {
+	protected $fillable   = array('code', 'characterID', 'fleetTypeID');
+	protected $table      = 'srp_fleets';
+	protected $primaryKey = 'id';
+	protected $softDelete = true;
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+	public function scopeAvailable($query, SrpCharacter $character)
+	{
+		if (SrpHelper::canReview() || SrpHelper::canPay()) {
+			return $query; }
+		else {
+			return $query->whereIn('characterID', $character->self()->lists('characterID')); }
+	}
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	public function character()
+	{
+		return $this->hasOne('EveAccountAPIKeyInfoCharacters', 'characterID', 'characterID');
+	}
+
+	public function doctrines()
+	{
+		return $this->belongsToMany('SrpDoctrine', 'srp_fleet_doctrines', 'fleetID', 'doctrineID');
+	}
+
+	public function type()
+	{
+		return $this->hasOne('SrpFleetType', 'id', 'fleetTypeID');
+	}
+
+	public function requests()
+	{
+		return $this->hasMany('SrpRequest', 'fleetID', 'id');
+	}
 }

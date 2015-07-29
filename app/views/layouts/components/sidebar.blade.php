@@ -120,6 +120,23 @@
         </ul>
       </li>
 
+      {{-- srp --}}
+      <li class="treeview @if (Request::is('srp/*')) active @endif">
+        <a href="#">
+          <i class="fa fa-money"></i> <span>SRP</span>
+          <i class="fa fa-angle-left pull-right"></i>
+        </a>
+        <ul class="treeview-menu">
+          @if (Seat\Services\Helpers\SrpHelper::getAvailableFleetTypes()->count() > 0)
+            <li><a href="{{ action('SrpFleetController@index') }}"><i class="fa  fa-fw fa-angle-double-right"></i> Fleets</a></li>
+          @endif
+          <li><a href="{{ action('SrpRequestController@index') }}"><i class="fa  fa-fw fa-angle-double-right"></i> Requests</a></li>
+          @if (Seat\Services\Helpers\SrpHelper::canConfigure())
+            <li><a href="{{ action('SrpConfigController@index') }}"><i class="fa fa-fw fa-cog"></i> Configure</a></li>
+          @endif
+        </ul>
+      </li>
+
       {{-- superuser only features --}}
       @if (\Auth::isSuperUser())
         <li class="treeview @if (Request::is('configuration/*')) active @endif">

@@ -72,7 +72,20 @@ Route::group(array('before' => 'auth|csrf|key.required'), function() {
     Route::controller('debug', 'DebugController');
     Route::controller('profile', 'ProfileController');
     Route::controller('help', 'HelpController');
+    //Route::controller('srp', 'SrpController');
 
+    // srp route group
+    Route::group(array('prefix' => 'srp'), function() {
+        Route::group(array('prefix' => 'config'), function() {
+            Route::get('/', 'SrpConfigController@index');
+            Route::resource('fleet', 'SrpFleetTypeController');
+            Route::resource('ship', 'SrpShipController');
+            Route::resource('doctrine', 'SrpDoctrineController');
+        });
+
+        Route::resource('fleet', 'SrpFleetController');
+        Route::resource('request', 'SrpRequestController');
+    });
 });
 
 // api route group

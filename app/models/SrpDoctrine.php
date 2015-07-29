@@ -23,24 +23,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+class SrpDoctrine extends Eloquent
 {
+	protected $fillable   = array('name');
+	protected $table      = 'srp_doctrines';
+	protected $primaryKey = 'id';
+	protected $softDelete = true;
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+	public function characters()
+	{
+		return $this->belongsToMany('EveAccountAPIKeyInfoCharacters', 'srp_doctrine_characters', 'fleetTypeID', 'apiCharacterID');
+	}
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	public function fleets()
+	{
+		return $this->belongsToMany('SrpFleet', 'srp_doctrine_fleet', 'doctrineID', 'fleetID');
+	}
+
+	public function ships()
+	{
+		return $this->belongsToMany('SrpShip', 'srp_doctrine_ships', 'doctrineID', 'shipID');
+	}
 }

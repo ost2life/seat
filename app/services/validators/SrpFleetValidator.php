@@ -23,24 +23,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+namespace App\Services\Validators;
+
+class SrpFleetValidator extends Validator
 {
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+	public static $rules = array(
+		'commander' => 'sometimes|required|integer|min:1',
+		'type' => 'sometimes|required|integer|min:1',
+		'code' => 'sometimes|required|min:3|max:20',
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+		'doctrine' => 'sometimes|required|integer|min:1',
+	);
+
 }

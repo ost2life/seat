@@ -23,24 +23,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class AllowNullFleetCode extends Migration
 {
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Runs the migration.
+	|
+	*/
+	public function up()
+	{
+		DB::statement('ALTER TABLE `srp_fleets` MODIFY `code` VARCHAR(255) NULL;');
+	}
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	/*
+	|--------------------------------------------------------------------------
+	| up()
+	|--------------------------------------------------------------------------
+	|
+	| Reverses the migration.
+	|
+	*/
+	public function down()
+	{
+		DB::statement('ALTER TABLE `srp_fleets` MODIFY `code` VARCHAR(255);');
+	}
+
 }

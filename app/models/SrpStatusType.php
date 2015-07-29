@@ -23,24 +23,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-class DatabaseSeeder extends Seeder
+use Seat\Services\Helpers\SrpHelper;
+
+class SrpStatusType extends Eloquent
 {
+	protected $fillable   = array('name', 'tag');
+	protected $table      = 'srp_status_types';
+	protected $primaryKey = 'id';
+	protected $softDelete = true;
 
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
-    {
-        Eloquent::unguard();
+	public function available()
+	{
+		if (SrpHelper::canPay()) {
+			return $this->whereIn('id', array(2, 3, 4, 5)); }
+		else if (SrpHelper::canReview()) {
+			return $this->whereIn('id', array(2, 3, 4)); }
+		else {
+			return $this->whereIn('id', array(0)); }
+	}
 
-        $this->call('UserTableSeeder');
-        $this->call('EveApiCalllistTableSeeder');
-        $this->call('EveNotificationTypesSeeder');
-        $this->call('EveCorporationRolemapSeeder');
-        $this->call('SeatSettingSeeder');
-        $this->call('SeatPermissionsSeeder');
-        $this->call('SrpSeeder');
-    }
+	public function statuses()
+	{
+		return $this->hasMany('SrpRequestStatus', 'statusTypeID', 'id');
+	}
 }
